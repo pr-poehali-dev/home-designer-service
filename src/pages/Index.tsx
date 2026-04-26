@@ -73,6 +73,31 @@ export default function Index() {
   const [activeSection, setActiveSection] = useState("home");
   const [menuOpen, setMenuOpen] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
+  const [formStatus, setFormStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [formError, setFormError] = useState("");
+
+  const handleSubmit = async () => {
+    setFormStatus("loading");
+    setFormError("");
+    try {
+      const res = await fetch("https://functions.poehali.dev/06ee754c-0abe-4c24-b2b8-783d16adb9dc", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setFormStatus("success");
+        setFormData({ name: "", email: "", message: "" });
+      } else {
+        setFormStatus("error");
+        setFormError(data.error || "Что-то пошло не так. Попробуйте ещё раз.");
+      }
+    } catch {
+      setFormStatus("error");
+      setFormError("Ошибка соединения. Проверьте интернет и попробуйте снова.");
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -415,17 +440,36 @@ export default function Index() {
               style={{ background: "hsl(20,14%,8%)", border: "1px solid rgba(255,255,255,0.08)", color: "white" }}
             />
           </div>
-          <button
-            className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all hover:scale-[1.02]"
-            style={{ background: "hsl(36,80%,58%)", color: "hsl(20,14%,4%)", boxShadow: "0 8px 32px hsl(36, 80%, 58%, 0.25)" }}>
-            Отправить заявку
-          </button>
+          {formStatus === "error" && (
+            <div className="mb-4 px-4 py-3 rounded-xl text-sm" style={{ background: "hsl(348,60%,55%,0.12)", border: "1px solid hsl(348,60%,55%,0.3)", color: "hsl(348,60%,70%)" }}>
+              {formError}
+            </div>
+          )}
+
+          {formStatus === "success" ? (
+            <div className="py-6 text-center rounded-xl" style={{ background: "hsl(36, 80%, 58%, 0.08)", border: "1px solid hsl(36, 80%, 58%, 0.2)" }}>
+              <div style={{ fontSize: "2rem", marginBottom: "8px" }}>✦</div>
+              <div style={{ color: "hsl(36,80%,65%)", fontWeight: 600, fontSize: "0.95rem" }}>Заявка отправлена!</div>
+              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.8rem", marginTop: "4px" }}>Мы свяжемся с вами в течение 24 часов</div>
+              <button onClick={() => setFormStatus("idle")} style={{ marginTop: "12px", fontSize: "0.75rem", color: "rgba(255,255,255,0.3)", textDecoration: "underline" }}>
+                Отправить ещё
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleSubmit}
+              disabled={formStatus === "loading"}
+              className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all hover:scale-[1.02]"
+              style={{ background: formStatus === "loading" ? "hsl(36,80%,40%)" : "hsl(36,80%,58%)", color: "hsl(20,14%,4%)", boxShadow: "0 8px 32px hsl(36, 80%, 58%, 0.25)", cursor: formStatus === "loading" ? "not-allowed" : "pointer" }}>
+              {formStatus === "loading" ? "Отправляем..." : "Отправить заявку"}
+            </button>
+          )}
         </div>
 
         <div className="flex flex-wrap justify-center gap-6 mt-10">
           {[
-            { icon: "Mail", text: "hello@forma.ru" },
-            { icon: "Phone", text: "+7 (999) 000-00-00" },
+            { icon: "Mail", text: "Hover_naistert@mail.ru" },
+            { icon: "Phone", text: "+7 993 232 05 84" },
             { icon: "Instagram", text: "Instagram" },
           ].map((c) => (
             <a key={c.icon} href="#" className="flex items-center gap-2 transition-colors hover:text-amber-400"
